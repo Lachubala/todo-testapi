@@ -24,43 +24,39 @@ const port = process.env.PORT || 3050;
 app.listen(port, () => console.log("listening port " + port));
 
 //return tag
-const tag = new Promise((resolve, reject) => {
-  app.get("/api/tags", (req, res) => {
-    con.query("SELECT * FROM tag", (err, result) => {
-        if (err)
-          throw (err);
-        res.send(result);
+(async()=> {
+  try{
+    const tag = await new Promise((resolve, reject) => {
+      app.get("/api/tags", (req, res) => {
+        con.query("SELECT * FROM tag", (err, result) => {
+          if (err)
+            throw (err);
+          res.send(result);
+        });
       });
-  });
-});
-
-tag
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
-
-//retrun todos
-const todo = new Promise((resolve, reject) => {
-  app.get("/api/todos", (req, res) => {
-    con.query("SELECT * FROM todo", function (err, result) {
-      if (err) throw(err);
-      res.send(result);
     });
-  });
-});
-
-todo
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
+  }
+  catch(error){
     console.log(error);
-  });
-
+  }
+})();
+//retrun todos
+(async()=> {
+  try{
+    const todos = await new Promise((resolve, reject) => {
+      app.get("/api/todos", (req, res) => {
+        con.query("SELECT * FROM todo", (err, result) => {
+          if (err)
+            throw (err);
+          res.send(result);
+        });
+      });
+    });
+  }
+  catch(error){
+    console.log(error);
+  }
+})();
 //get tag
 const gettag = new Promise((resolve, reject) => {
   app.get("/api/tags/:id", (req, res) => {
