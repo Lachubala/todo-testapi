@@ -1,3 +1,4 @@
+const { response } = require("express");
 const express = require("express");
 const Joi = require("joi");
 const mysql = require("mysql");
@@ -24,157 +25,192 @@ const port = process.env.PORT || 3050;
 app.listen(port, () => console.log("listening port " + port));
 
 //return tag
-(async()=> {
-  try{
-    const tag = await new Promise((resolve, reject) => {
-      app.get("/api/tags", (req, res) => {
-        con.query("SELECT * FROM tag", (err, result) => {
-          if (err)
-            throw (err);
-          res.send(result);
-        });
-      });
+function gettag(req) {
+  return new Promise((resolve, reject) => {
+    con.query("SELECT * FROM tag", (err, result) => {
+        if(err) reject(err);
+        else resolve(result);
+      }
+    );
+  });
+}
+
+app.get("/api/tags", (req, res) => {
+    gettag(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.send(error)
     });
-  }
-  catch(error){
-    console.log(error);
-  }
-})();
+});
+
 //retrun todos
-(async()=> {
-  try{
-    const todos = await new Promise((resolve, reject) => {
-      app.get("/api/todos", (req, res) => {
-        con.query("SELECT * FROM todo", (err, result) => {
-          if (err)
-            throw (err);
-          res.send(result);
-        });
-      });
+function gettodo(req) {
+  return new Promise((resolve, reject) => {
+    con.query("SELECT * FROM todo", (err, result) => {
+        if(err) reject(err);
+        else resolve(result);
+      }
+    );
+  });
+}
+
+app.get("/api/todos", (req, res) => {
+    gettodo(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.end(JSON.stringify({
+        error: error
+      }))
     });
-  }
-  catch(error){
-    console.log(error);
-  }
-})();
+});
+
 //get tag
-const gettag = new Promise((resolve, reject) => {
-  app.get("/api/tags/:id", (req, res) => {
+function gettagbyid(req) {
+  return new Promise((resolve, reject) => {
     con.query(
       "SELECT * FROM tag WHERE id= ?",
       [req.params.id],
-      async (err, result, fields) => res.end(JSON.stringify(result))
+      async (err, result, fields) => {
+        if(err) reject(err);
+        else resolve(result);
+      }
     );
   });
+}
+
+app.get("/api/tags/:id", (req, res) => {
+    gettagbyid(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.send(error);
+    });
 });
 
-gettag
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
 //put tag
-const puttag = new Promise((resolve, reject) => {
-  app.put("/api/tags/:id", (req, res) => {
+function puttag(req){
+  return new Promise((resolve,reject)=>{
     con.query(
       "update tag set name = ?, description = ? where id = ?",
       [req.body.name, req.body.description, req.params.id],
-      async (err, result, fields) => res.end(JSON.stringify(result))
-    );
-  });
+      async (err, result, fields) =>{
+        if(err) reject(err);
+        else resolve(result);
+      }
+      );
+    });
+  }
+  app.put("/api/tags/:id", (req, res) => {
+    puttag(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.end(error);
+    });
 });
-
-puttag
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
 
 //post tags
-const posttag = new Promise((resolve, reject) => {
+function posttag(req){
+  return new Promise((resolve,reject)=>{
+    con.query("INSERT INTO tag(name,description) VALUES (?,?) ",
+    [req.body.name, req.body.description],
+    async (err, result, fields) =>{
+        if(err) reject(err);
+        else resolve(result);
+      }
+      );
+    });
+  }
   app.post("/api/tags", (req, res) => {
-    con.query(
-      "INSERT INTO tag(name,description) VALUES (?,?) ",
-      [req.body.name, req.body.description],
-      async (err, result, fields) => res.end(JSON.stringify(result))
-    );
-  });
+    posttag(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.end(error);
+    });
 });
-
-posttag
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
+  
 //delete tags
-const deletetag = new Promise((resolve, reject) => {
-  app.delete("/api/tags/:id", (req, res) => {
+
+function deletetodo(req) {
+  return new Promise((resolve, reject) => {
     con.query(
-      "DELETE FROM tag WHERE id= ?",
+      "DELETE FROM todo WHERE id= ?",
       [req.params.id],
-      async (err, result, fields) => res.end(JSON.stringify(result))
+      (err, result, fields) => {
+        if(err) reject(err);
+        else resolve(result);
+      }
     );
   });
+}
+
+app.delete("/api/todos/:id", (req, res) => {
+    deletetodo(req)
+    .then((result) => {
+      res.end(JSON.stringify(result));
+    })
+    .catch((error) => {
+      res.end(error);
+    });
 });
-
-deletetag
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
 // get todos
-
-const gettodo = new Promise((resolve, reject) => {
-  app.get("/api/todos/:id", (req, res) => {
+function gettodobyid(req) {
+  return new Promise((resolve, reject) => {
     con.query(
       "SELECT * FROM todo WHERE id= ?",
       [req.params.id],
-      async (err, result, fields) => res.end(JSON.stringify(result))
+      async (err, result, fields) => {
+        if(err) reject(err);
+        else resolve(result);
+      }
     );
   });
+}
+
+app.get("/api/todos/:id", (req, res) => {
+    gettodobyid(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.send(error);
+    });
 });
 
-gettodo
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
 //put todos
-const puttodo = new Promise((resolve, reject) => {
-  app.put("/api/todos/:id", (req, res) => {
+function puttodo(req){
+  return new Promise((resolve,reject)=>{
     con.query(
       "UPDATE todo SET name = ?,description = ?,content = ? WHERE todo.id = ?",
       [req.body.name, req.body.description, req.body.content, req.params.id],
-      async (err, result, fields) => res.end(JSON.stringify(result))
-    );
-  });
+      async (err, result, fields) =>{
+        if(err) reject(err);
+        else resolve(result);
+      }
+      );
+    });
+  }
+  app.put("/api/todos/:id", (req, res) => {
+    puttodo(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.send(error);
+    });
 });
 
-puttodo
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
 //post todos
-const posttodo = new Promise((resolve, reject) => {
-  app.post("/api/todos", (req, res) => {
+function posttodo(req){
+  return new Promise((resolve,reject)=>{
     con.query(
       "SELECT id FROM tag WHERE id=?",
       [req.body.tag_id],
@@ -188,39 +224,48 @@ const posttodo = new Promise((resolve, reject) => {
               req.body.content,
               req.body.tag_id,
             ],
-            async (err, result, fields) => res.end(JSON.stringify(result))
+            async (err, result, fields) => {
+              if(err) reject(err);
+              else resolve(result);
+            }
           );
         } else {
-          res.send("tag id not found");
+          console.log("todo id not found");
         }
       }
     );
-  });
+    });
+  }
+  app.post("/api/todos", (req, res) => {
+    posttodo(req)
+    .then((result) => {
+      res.send(result);
+    })
+    .catch((error) => {
+      res.end(error);
+    });
 });
 
-posttag
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
 //delete todos
-const deletetodo = new Promise((resolve, reject) => {
-  app.delete("/api/todos/:id", (req, res) => {
+function deletetodo(req) {
+  return new Promise((resolve, reject) => {
     con.query(
       "DELETE FROM todo WHERE id= ?",
       [req.params.id],
-      async (err, result, fields) => res.end(JSON.stringify(result))
+      (err, result, fields) => {
+        if(err) reject(err);
+        else resolve(result);
+      }
     );
   });
-});
+}
 
-deletetodo
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+app.delete("/api/todos/:id", (req, res) => {
+    deletetodo(req)
+    .then((result) => {
+      res.end(JSON.stringify(result));
+    })
+    .catch((error) => {
+      res.end(error);
+    });
+});
